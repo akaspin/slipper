@@ -1,0 +1,45 @@
+# Messaging
+messaging:
+  use: kombu_pyamqp
+  kombu_pyamqp:
+    adapter: slipper.messaging.amqp.interface.AMQPAdapter
+    url: pyamqp://admin:admin@localhost:5672//
+    heartbeat: 1
+
+# Storage
+storage:
+  use: pymysql
+  pymysql:
+    adapter: slipper.storage.sql.interface.MySQLAdapter
+    url: mysql+pymysql://root:root@127.0.0.1/slipper
+
+# Logging
+logging:
+  version: 1
+  formatters:
+    brief:
+      format: '%(levelname)-7s %(process)s:%(threadName)s
+              %(name)s:%(lineno)s %(message)s'
+      datefmt: '%y-%m-%d,%H:%M:%S'
+  handlers:
+    console:
+      class : logging.StreamHandler
+      formatter: brief
+      stream  : ext://sys.stderr
+  # by default all existing loggers are disabled upon the application
+  # of this config. To re-enable a logger and it's childer just add it
+  # to the loggers section with any even empty fields.
+  loggers:
+    slipper:
+      handlers: [console]
+      level: INFO
+      propagate: False
+    kombu:
+      handlers: [console]
+      level: INFO
+      propagate: False
+  root:
+    handlers: [console]
+    level: WARNING
+    propagate: False
+
