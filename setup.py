@@ -10,7 +10,7 @@ setup(
     author_email='aka.spin@gmail.com',
     description='Task Flow',
     requires=[
-        'easydict', 'sqlalchemy', 'six', 'kombu', 'gevent'
+        'easydict', 'sqlalchemy', 'six', 'kombu', 'gevent', 'simplejson'
     ],
     package_data={
         'slipper': [

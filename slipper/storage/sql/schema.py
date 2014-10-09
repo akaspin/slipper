@@ -1,17 +1,15 @@
 # coding=utf-8
 from __future__ import absolute_import
 
-from sqlalchemy import Column, ForeignKey, ForeignKeyConstraint
+from sqlalchemy import Column, ForeignKeyConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.types import Text, DateTime, Boolean, SmallInteger, String, \
-    Integer
+from sqlalchemy.types import Text, DateTime, Boolean, String, Integer
 
-from .types import HASH
-from ...model.identity import compute_hash
-from .transaction import with_transaction
-from ..exc import NotUniqueError
+from slipper.storage.exc import NotUniqueError
+from slipper.storage.sql.types import HASH
+from slipper.storage.sql.transaction import with_transaction
 
 
 Base = declarative_base()
