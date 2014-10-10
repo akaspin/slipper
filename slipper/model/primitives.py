@@ -34,20 +34,20 @@ class Point(Serializable):
     """Contract point."""
 
     def __init__(self, uid, state=None, worker=None,
-                 dt_activity=None, dt_finish=None, meta=None):
+                 dt_activity=None, dt_finish=None, payload=None):
         """
         :param str uid: Point UID.
         :param int state: (optional) Point state. ``None`` means none
             (surprise!). Zero state means success. Any other is error code.
         :param datetime dt_activity: (optional) Last activity datetime.
         :param datetime dt_finish: (optional) Finish datetime.
-        :param dict meta: (optional) Metadata.
+        :param dict payload: (optional) Metadata.
         """
         super(Point, self).__init__()
         self.uid = uid
         self.state = state
         self.worker = worker
-        self.meta = meta
+        self.payload = payload
         self.dt_activity = dt_activity
         self.dt_finish = dt_finish
         if dt_activity is None and state is None:
@@ -74,7 +74,7 @@ class Point(Serializable):
             data['uid'],
             state=data.get('state'),
             worker=data.get('worker'),
-            meta=data.get('meta'),
+            payload=data.get('payload'),
             dt_activity=cls.from_timestamp(data.get('dt_activity')),
             dt_finish=cls.from_timestamp(data.get('dt_finish'))
         )
@@ -86,7 +86,7 @@ class Point(Serializable):
                     worker=self.worker,
                     dt_activity=self.to_timestamp(self.dt_activity),
                     dt_finish=self.to_timestamp(self.dt_finish),
-                    meta=self.meta)
+                    payload=self.payload)
 
     @staticmethod
     def to_timestamp(dt, epoch=datetime(1970,1,1)):
@@ -191,9 +191,7 @@ class Contract(Serializable):
         return Point(
             uid=self.uid,
             state=0,
-            meta={
-                'points': [p.serialized for p in self.points],
-                'payload': self.payload
-            }
+            payload={'points': [p.serialized for p in self.points],
+                     'payload': self.payload}
         ).serialized
 

@@ -30,7 +30,7 @@ class AbstractHandler(with_metaclass(ABCMeta)):
 
         :param data: Data.
         :type data: str or dict
-        :param bool raw: Is message parsed successfully.
+        :param bool raw: Non parsed message.
         :returns: ``False`` if message processed or ``True`` if message
             needs be processed later.
         :rtype: bool
@@ -53,6 +53,7 @@ class PointsNewHandler(AbstractHandler):
     __SOURCE__ = 'points_new'
 
     def accept(self, data, raw):
+        # Raw points
         print self, data
 
 

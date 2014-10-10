@@ -65,7 +65,7 @@ class StorageTest(DBTestBase):
         )
         self.adapter.create_contract(c)
         p1.state = 34
-        self.adapter.update_point(p1)
+        self.assertEqual(self.adapter.update_point(p1), 2)
         res = self.adapter.get_contract(c.uid, c.sub_hash)
         for p in res.points:
             if p.uid == p1.uid:

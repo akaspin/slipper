@@ -18,20 +18,20 @@ class PointTestCase(unittest.TestCase, object):
 
     def test_serialize(self):
         fixture = {'state': None,
-                   'meta': None,
                    'uid': compute_hash(self.name),
                    'dt_finish': None,
                    'worker': None,
-                   'dt_activity': Point.to_timestamp(self.dt_activity)}
+                   'dt_activity': Point.to_timestamp(self.dt_activity),
+                   'payload': None}
         self.assertEqual(fixture, self.fixture.serialized)
 
     def test_from_serialized(self):
         fixture = {'state': 35,
-                   'meta': None,
                    'worker': None,
                    'uid': compute_hash(self.name),
                    'dt_finish': Point.to_timestamp(self.dt_activity),
-                   'dt_activity': Point.to_timestamp(self.dt_activity)}
+                   'dt_activity': Point.to_timestamp(self.dt_activity),
+                   'payload': None}
         self.assertDictEqual(fixture,
                              Point.from_serialized(fixture).serialized)
 

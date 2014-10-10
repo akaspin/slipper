@@ -47,7 +47,8 @@ class MySQLAdapter(AbstractStorageAdapter):
                     state=p.state,
                     worker=p.worker,
                     dt_activity=p.dt_activity,
-                    dt_finish=p.dt_finish
+                    dt_finish=p.dt_finish,
+                    payload=p.payload
                 ) for p in contract.points]
             ).store(session=session)
             return contract
@@ -67,7 +68,8 @@ class MySQLAdapter(AbstractStorageAdapter):
                     state=p.state,
                     worker=None,
                     dt_activity=p.dt_activity,
-                    dt_finish=p.dt_finish
+                    dt_finish=p.dt_finish,
+                    payload=p.payload
                 ) for p in res.points],
                 timeout=res.timeout,
                 route=res.route,

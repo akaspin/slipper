@@ -102,6 +102,8 @@ class Point(Base, StorableMixin):
     dt_finish = Column('dt_finish', DateTime, nullable=True, index=True,
                        default=None)
 
+    payload = Column('payload', Text, nullable=True)
+
     __table_args__ = (
         ForeignKeyConstraint([contract_uid, sub_hash],
                              [Contract.uid, Contract.sub_hash],

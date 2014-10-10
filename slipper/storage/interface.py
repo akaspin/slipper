@@ -45,6 +45,8 @@ class AbstractStorageAdapter(with_metaclass(ABCMeta)):
 
         :param point: Parsed point.
         :type point: :class:`slipper.model.primitives.Point`
+        :returns: Number of updated points.
+        :rtype: int
         """
 
 
