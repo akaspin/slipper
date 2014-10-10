@@ -44,8 +44,6 @@ class ContractsNewHanler(AbstractHandler):
         if raw:
             raise model_exc.InvalidContractDataError(data=data)
         contract = Contract.from_serialized(data)
-        if contract.routing is None:
-            raise model_exc.NotRoutedContractError(data=data)
         storage.adapter.create_contract(contract)
         messaging.adapter.get_producer(INTERNAL).publish(contract.uid)
         LOG.debug('Contract added: %s', data)
