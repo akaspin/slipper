@@ -17,7 +17,7 @@ class StorageTest(DBTestBase):
         super(StorageTest, self).setUp()
         self.adapter = interface.adapter
 
-    def atest_create(self, session=None):
+    def test_create(self, session=None):
         c1 = primitives.Contract(
             timeout=timedelta(hours=1).seconds,
             route='abs',
@@ -37,7 +37,7 @@ class StorageTest(DBTestBase):
         self.assertDictEqual(c2.serialized, c2s.serialized)
         self.assertIsNone(c2b)
 
-    def atest_create_delete(self):
+    def test_create_delete(self):
         """Create contract when delete sub."""
         c = primitives.Contract(
             timeout=timedelta(hours=1).seconds,
@@ -49,6 +49,8 @@ class StorageTest(DBTestBase):
         self.adapter.delete_contract(c.uid, c.sub_hash)
         with self.assertRaises(exc.NotFoundError):
             self.adapter.get_contract(c.uid, c.sub_hash)
+        with self.assertRaises(exc.NotFoundError):
+            self.adapter.delete_contract(c.uid, c.sub_hash)
         res = self.adapter.get_contract(c.base.uid, c.base.sub_hash)
         self.assertDictEqual(c.base.serialized, res.serialized)
         self.adapter.delete_contract(c.base.uid, c.base.sub_hash)
@@ -56,17 +58,20 @@ class StorageTest(DBTestBase):
             self.adapter.get_contract(c.base.uid, c.base.sub_hash)
 
     def test_update_point(self):
-        p1 = primitives.Point(uid=compute_hash('1'))
         c = primitives.Contract(
             timeout=timedelta(hours=1).seconds,
             route='abs1',
-            points=[p1] + [primitives.Point(uid=compute_hash(d))
-                           for d in ['a', 'b', 'c']],
+            points=[primitives.Point(uid=compute_hash(d))
+                    for d in ['a', 'b', 'c']],
         )
         self.adapter.create_contract(c)
-        p1.state = 34
-        self.assertEqual(self.adapter.update_point(p1), 2)
+        new_point = primitives.Point(uid=compute_hash('a'), state=34)
+        self.adapter.update_point(new_point)
         res = self.adapter.get_contract(c.uid, c.sub_hash)
         for p in res.points:
-            if p.uid == p1.uid:
+            if p.uid == new_point.uid:
                 self.assertEqual(p.state, 34)
+
+    def test_update_non_existent_point(self):
+        with self.assertRaises(exc.NotFoundError):
+            self.adapter.update_point(primitives.Point(uid=compute_hash('F')))

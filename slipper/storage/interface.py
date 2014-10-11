@@ -14,11 +14,14 @@ class AbstractStorageAdapter(with_metaclass(ABCMeta)):
     @classmethod
     @abstractmethod
     def create_contract(cls, contract):
-        """Create contract in storage. Also creates base contract.
+        """Create contract in storage.
 
         :param contract: Parsed contract.
         :type contract: :py:class:`slipper.model.primitives.Contract`
         :raises NotUniqueError: If contract already exists.
+        :returns: `True` if contract created. `False` if contract already
+            registered.
+        :rtype: bool
         """
 
     @classmethod
@@ -36,7 +39,13 @@ class AbstractStorageAdapter(with_metaclass(ABCMeta)):
     @classmethod
     @abstractmethod
     def delete_contract(cls, uid, sub_hash):
-        """Delete existing contract."""
+        """Delete existing contract.
+
+        :param str uid: Contract UID.
+        :param str sub_hash: Subcontract HASH.
+        :raises :py:class:`slipper.storage.exc.NotFoundError`:
+            When contract not found.
+        """
 
     @classmethod
     @abstractmethod
@@ -45,8 +54,8 @@ class AbstractStorageAdapter(with_metaclass(ABCMeta)):
 
         :param point: Parsed point.
         :type point: :class:`slipper.model.primitives.Point`
-        :returns: Number of updated points.
-        :rtype: int
+        :raises :py:class:`slipper.storage.exc.NotFoundError`:
+            When point not found.
         """
 
 

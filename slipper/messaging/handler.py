@@ -38,6 +38,8 @@ class AbstractHandler(with_metaclass(ABCMeta)):
 
 
 class ContractsNewHanler(AbstractHandler):
+    """Handler to register new contract."""
+
     __SOURCE__ = CONTRACTS_NEW
 
     def accept(self, data, raw):

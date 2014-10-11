@@ -6,8 +6,8 @@ from sqlalchemy.orm.exc import NoResultFound
 from slipper.model import primitives
 from slipper.storage.interface import AbstractStorageAdapter
 from slipper.storage.exc import NotUniqueError, NotFoundError
-from slipper.storage.sql.transaction import with_transaction
 from slipper.storage.sql.boot import Boot
+from slipper.storage.sql.transaction import with_transaction
 from slipper.storage.sql.schema import Contract, Point
 
 
@@ -82,8 +82,11 @@ class MySQLAdapter(AbstractStorageAdapter):
     @classmethod
     @with_transaction()
     def delete_contract(cls, uid, sub_hash, session=None):
-        session.query(Contract).filter(Contract.uid == uid,
-                                       Contract.sub_hash == sub_hash).delete()
+        res = session.query(Contract).filter(
+            Contract.uid == uid, Contract.sub_hash == sub_hash
+        ).delete()
+        if res != 1:
+            raise NotFoundError(entity=Contract, uid='-'.join([uid, sub_hash]))
 
     @classmethod
     @with_transaction()
@@ -96,6 +99,13 @@ class MySQLAdapter(AbstractStorageAdapter):
             dt_activity=point.dt_activity,
             dt_finish=point.dt_finish
         )
-        return session.query(Point).filter(
+        res = session.query(Point).filter(
             Point.uid == point.uid, Point.state.is_(None)).update(
-                {k: v for (k, v) in values.items() if v is not None})
+                {k: v for (k, v)
+                 in dict(state=point.state,
+                         worker=point.worker,
+                         dt_activity=point.dt_activity,
+                         dt_finish=point.dt_finish).items()
+                 if v is not None})
+        if res == 0:
+            raise NotFoundError(entity=Contract, uid=point.uid)

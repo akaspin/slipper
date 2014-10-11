@@ -101,7 +101,19 @@ class Point(Serializable):
 
 
 class Contract(Serializable):
-    """Contract. """
+    """Contract.
+
+    Contracts are divided into two types: base and routed.
+    """
+
+    #: Normal state
+    OK = 0
+
+    #: Contract expired
+    EXPIRED = 1
+
+    #: Dependencies failed
+    FAILED = 2
 
     def __init__(self, points=None, timeout=None, route=None,
                  strict=False, payload=None):
