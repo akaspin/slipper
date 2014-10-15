@@ -4,6 +4,7 @@ from abc import ABCMeta, abstractmethod
 from six import with_metaclass
 
 from slipper.env import getLogger
+from slipper.model.identity import compute_hash
 from slipper.model.primitives import Contract, Point
 from slipper.model import exc as model_exc
 from slipper.messaging.interface import interface as messaging
@@ -52,11 +53,14 @@ class ContractsNewHanler(AbstractHandler):
 
 
 class PointsNewHandler(AbstractHandler):
+    """Handler to accept points notifications."""
+
     __SOURCE__ = 'points_new'
 
     def accept(self, data, raw):
-        # Raw points
-        print self, data
+        point = Point(uid=compute_hash(data)) if raw else \
+            Point.from_serialized(data)
+        storage.adapter.update_point(point)
 
 
 class InternalHandler(AbstractHandler):

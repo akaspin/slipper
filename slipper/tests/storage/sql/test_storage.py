@@ -45,26 +45,19 @@ class StorageTest(DBTestBase):
         c1 = primitives.Contract(
             timeout=timedelta(hours=1).seconds,
             route='abs1',
-            points=[primitives.Point(uid=compute_hash(d))
-                    for d in ['a', 'b', 'c']],
+            points=points,
         )
         c2 = primitives.Contract(
             timeout=timedelta(hours=1).seconds,
-            points=[primitives.Point(uid=compute_hash(d))
-                    for d in ['a', 'b', 'c']],
+            points=points,
         )
         self.adapter.create_contract(c1)
         self.adapter.create_contract(c2)
-        # self.adapter.delete_contract(c.uid, c.sub_hash)
-        # with self.assertRaises(exc.NotFoundError):
-        #     self.adapter.get_contract(c.uid, c.sub_hash)
-        # with self.assertRaises(exc.NotFoundError):
-        #     self.adapter.delete_contract(c.uid, c.sub_hash)
-        # res = self.adapter.get_contract(c.base.uid, c.base.sub_hash)
-        # self.assertDictEqual(c.base.serialized, res.serialized)
-        # self.adapter.delete_contract(c.base.uid, c.base.sub_hash)
-        # with self.assertRaises(exc.NotFoundError):
-        #     self.adapter.get_contract(c.base.uid, c.base.sub_hash)
+        self.adapter.delete_contract(c1.uid, c1.sub_hash)
+        with self.assertRaises(exc.NotFoundError):
+            self.adapter.get_contract(c1.uid, c1.sub_hash)
+        with self.assertRaises(exc.NotFoundError):
+            self.adapter.delete_contract(c1.uid, c1.sub_hash)
 
     def test_update_point(self):
         c = primitives.Contract(

@@ -80,12 +80,6 @@ class MySQLAdapter(AbstractStorageAdapter):
     def update_point(cls, point, session=None):
         # Update only incomplete points. Exclude NULL values
         # from update data.
-        values = dict(
-            state=point.state,
-            worker=point.worker,
-            dt_activity=point.dt_activity,
-            dt_finish=point.dt_finish
-        )
         res = session.query(Point).filter(
             Point.uid == point.uid, Point.state.is_(None)).update(
                 {k: v for (k, v)
