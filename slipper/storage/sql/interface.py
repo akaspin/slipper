@@ -24,36 +24,23 @@ class MySQLAdapter(AbstractStorageAdapter):
         :type contract: :py:class:`slipper.model.primitives.Contract`
         :raises NotUniqueError: If contract already exists.
         """
-        base_res = cls._create(contract.base, session=session)
-        sub_res = None
-        if not contract.is_base:
-            sub_res = cls._create(contract, session=session)
-        return base_res, sub_res
-
-    @classmethod
-    @with_transaction()
-    def _create(cls, contract, session=None):
-        try:
-            Contract(
-                uid=contract.uid,
-                timeout=contract.timeout,
-                sub_hash=contract.sub_hash,
-                strict=contract.strict,
-                route=contract.route,
-                payload=contract.payload,
-                points=[Point(
-                    uid=p.uid,
-                    contract_uid=contract.uid,
-                    state=p.state,
-                    worker=p.worker,
-                    dt_activity=p.dt_activity,
-                    dt_finish=p.dt_finish,
-                    payload=p.payload
-                ) for p in contract.points]
-            ).store(session=session)
-            return contract
-        except NotUniqueError:
-            pass
+        Contract(
+            uid=contract.uid,
+            timeout=contract.timeout,
+            sub_hash=contract.sub_hash,
+            strict=contract.strict,
+            route=contract.route,
+            payload=contract.payload,
+            points=[Point(
+                uid=p.uid,
+                contract_uid=contract.uid,
+                state=p.state,
+                worker=p.worker,
+                dt_activity=p.dt_activity,
+                dt_finish=p.dt_finish,
+                payload=p.payload
+            ) for p in contract.points]
+        ).store(session=session)
 
     @classmethod
     @with_transaction()

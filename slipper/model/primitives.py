@@ -101,30 +101,29 @@ class Point(Serializable):
 
 
 class Contract(Serializable):
-    """Contract.
+    """Contracts are divided into two types: base and routed.
 
-    Contracts are divided into two types: base and routed.
+    Base contracts hasn't route info. They are used as internal dependencies.
+    Base contract are always non-strict and hasn't payload.
     """
 
     #: Normal state
     OK = 0
 
-    #: Contract expired
-    EXPIRED = 1
-
     #: Dependencies failed
-    FAILED = 2
+    FAILED = 1
 
-    def __init__(self, points=None, timeout=None, route=None,
+    def __init__(self, points, timeout, route=None,
                  strict=False, payload=None):
         """
         :param points: Contract points.
-        :param int timeout: Expiration date.
-        :param str route: Report routing key. Used for route contract
-            report.
-        :param bool strict: (optional) Greedy behaviour.
-        :param str payload: (optional) Payload
-        :type points: list[Point]
+        :type points: list[:py:class:`slipper.model.primitives.Point`]
+        :param int timeout: Last activity timeout.
+        :param str route: (optional) Report routing key. Used for route
+            contract report. Default is ``None``
+        :param bool strict: (optional) Strict behaviour. Strict contracts
+            fail on first failed point. Default is ``False``
+        :param str payload: (optional) Payload.
         """
 
         self.points = sorted(points, key=attrgetter('uid'))
@@ -132,45 +131,40 @@ class Contract(Serializable):
         self.strict = strict
         self.route = route
         self.payload = payload
-        # Check conditions
-        if not points or not timeout:
-            raise InvalidContractDataError(data=self.serialized)
         # Check base contract
         if route is None and (strict or payload is not None):
             raise InvalidContractDataError(data=self.serialized)
 
-
     @property
-    def is_base(self):
-        """Is contract base."""
-        return self.route is None and self.payload is None and not self.strict
+    def state(self):
+        """Contract state.
 
-    @property
-    def is_done(self):
-        """Is contract done. Regardless of errors."""
+        :returns: Contract state based contract props and points states.
+            ``None`` means what contract is incomplete. Zero (``0``) means
+            what contract is ready. Also state may become error code.
+        :rtype: int or None
+        """
+        res = []
         for point in self.points:
-            # If contract is strict and point failed - close contract.
             state = point.get_state(self.timeout)
+            res.append(state)
+            if not self.strict and state is None:
+                # Non-strict contracts must wait for all states.
+                return None
             if self.strict and state is not None and state != 0:
-                return True
-            if state is None:
-                return False
-        return True
-
-    @property
-    def base(self):
-        """Get base contract."""
-        if self.is_base:
-            return self
-        else:
-            return Contract(points=self.points, timeout=self.timeout)
+                # Strict contracts fail on first error.
+                return self.FAILED
+        if None not in res:
+            return self.FAILED if any(s != 0 for s in res) else self.OK
 
     @property
     def uid(self):
+        """Contract UID"""
         return compute_hash(*(point.uid for point in self.points))
 
     @property
     def sub_hash(self):
+        """Contract sub hash."""
         return compute_hash(self.route, self.strict, self.payload)
 
     @classmethod
@@ -202,7 +196,7 @@ class Contract(Serializable):
         """
         return Point(
             uid=self.uid,
-            state=0,
+            state=self.state,
             payload={'points': [p.serialized for p in self.points],
                      'payload': self.payload}
         ).serialized

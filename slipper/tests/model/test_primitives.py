@@ -36,30 +36,61 @@ class PointTestCase(unittest.TestCase, object):
                              Point.from_serialized(fixture).serialized)
 
 
-class ContractTestCase(unittest.TestCase, object):
+class TestBase(object):
 
-    def setUp(self):
-        self.regular = Contract(
-            points=[Point(compute_hash(i)) for i in ['a', 'b', 'c']],
-            timeout=30
-        )
-        self.strict = Contract(
+    class ContainerTestBase(unittest.TestCase, object):
+
+        def setUp(self):
+            self.contract = self.get_contract()
+
+        def get_contract(self):
+            raise NotImplementedError('Child responsibility')
+
+        def test_not_done_all_points_incomplete(self):
+            """"""
+            self.assertIsNone(self.contract.state)
+
+        def test_done_all_points_success(self):
+            for point in self.contract.points:
+                point.state = 0
+            self.assertEqual(self.contract.state, 0)
+
+        def test_is_not_done_with_one_point_success(self):
+            self.contract.points[0].state = 0
+            self.assertIsNone(self.contract.state)
+
+        def test_failed_if_all_complete_one_fail(self):
+            for point in self.contract.points:
+                point.state = 0
+            self.contract.points[0].state = 2
+            self.assertEqual(self.contract.state, 1)
+
+
+class StrictContractTestCase(TestBase.ContainerTestBase):
+    """Strict contracts behaviour."""
+
+    def get_contract(self):
+        return Contract(
             points=[Point(compute_hash(i)) for i in ['a', 'b', 'c']],
             timeout=30,
-            strict=True,
-            route='strict'
+            route='strict',
+            strict=True
         )
 
-    def test_is_base(self):
-        self.assertTrue(self.regular.is_base)
-        self.assertFalse(self.strict.is_base)
+    def test_failed_if_all_incomplete_one_fail(self):
+        self.contract.points[0].state = 2
+        self.assertEqual(self.contract.state, 1)
 
-    def test_regular_is_done(self):
-        self.assertFalse(self.regular.is_done)
-        for p in self.regular.points:
-            p.state = 0
-        self.assertTrue(self.regular.is_done)
 
-    def test_strict_is_done(self):
-        self.strict.points[0].state = 34
-        self.assertTrue(self.strict.is_done)
+class NonStrictContractTestCase(TestBase.ContainerTestBase):
+
+    def get_contract(self):
+        return Contract(
+            points=[Point(compute_hash(i)) for i in ['a', 'b', 'c']],
+            timeout=30,
+        )
+
+    def test_incomplete_if_all_incomplete_one_fail(self):
+        self.contract.points[0].state = 2
+        self.assertEqual(self.contract.state, None)
+

@@ -19,9 +19,6 @@ class AbstractStorageAdapter(with_metaclass(ABCMeta)):
         :param contract: Parsed contract.
         :type contract: :py:class:`slipper.model.primitives.Contract`
         :raises NotUniqueError: If contract already exists.
-        :returns: `True` if contract created. `False` if contract already
-            registered.
-        :rtype: bool
         """
 
     @classmethod
