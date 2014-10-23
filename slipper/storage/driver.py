@@ -4,12 +4,11 @@ from abc import ABCMeta, abstractmethod
 
 from six import with_metaclass
 
+from slipper.utils.proxy import PromiseProxy
+from slipper.driver import AbstractDriver, get_driver
 
-from slipper.interface import AbstractInterface
 
-
-class AbstractStorageAdapter(with_metaclass(ABCMeta)):
-    """Abstract storage interface."""
+class AbstractStorageDriver(AbstractDriver):
 
     @classmethod
     @abstractmethod
@@ -56,8 +55,6 @@ class AbstractStorageAdapter(with_metaclass(ABCMeta)):
         """
 
 
-class StorageInterface(AbstractInterface):
-    __NAME__ = 'storage'
-
-
-interface = StorageInterface()
+#: Storage driver
+DRIVER = PromiseProxy(lambda: get_driver('storage')())
+""":type : :py:class:`slipper.storage.interface.AbstractStorageDriver`"""

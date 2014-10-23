@@ -2,16 +2,16 @@
 
 from slipper.utils.proxy import PromiseProxy
 
-from slipper.messaging.interface import AbstractMessagingAdapter
-from slipper.messaging.amqp.boot import Boot
+from slipper.messaging.driver import AbstractMessagingDriver
 from slipper.messaging.amqp.consumer import Consumer
 from slipper.messaging.amqp.producer import Producer
 from slipper.messaging.amqp.schema import exchanges, queues
 
 
-class AMQPAdapter(AbstractMessagingAdapter):
+class KombuDriver(AbstractMessagingDriver):
 
-    __BOOT__ = Boot
+    def boot(self):
+        pass
 
     def get_consumer(self, handler):
         queue = queues[handler.__SOURCE__]

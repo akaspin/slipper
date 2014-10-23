@@ -1,0 +1,9 @@
+amqp==1.4.6
+easydict==1.5
+PyMySQL==0.6.2
+PyYAML==3.11
+SQLAlchemy==0.9.8
+gevent==1.0.1
+kombu==3.0.23
+msgpack-python==0.4.2
+six==1.8.0

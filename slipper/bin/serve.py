@@ -2,15 +2,22 @@
 from gevent import monkey
 monkey.patch_all()
 
+from logging import getLogger
+import os
+
 from gevent import get_hub, spawn
+from gevent.pywsgi import WSGIServer
 
-from slipper.env import getLogger
+from slipper.env import CFG
 
+from slipper.http.handler import app
+
+from slipper.messaging.driver import DRIVER
 from slipper.messaging.handler import ContractsNewHanler, PointsNewHandler, \
     InternalHandler
-from slipper.messaging.interface import interface
 
 
+CFG(os.environ.get('SLIPPER_CONFIG'))
 LOG = getLogger(__name__)
 
 
@@ -20,15 +27,20 @@ def run_forever(cb):
     try:
         hub.join()
     except (SystemExit, KeyboardInterrupt):
+        hub.parent.throw(SystemExit())
         pass
 
 
 def run_all():
     for handler in [ContractsNewHanler, PointsNewHandler, InternalHandler]:
-        spawn(interface.adapter.get_consumer(handler).run)
+        spawn(DRIVER.get_consumer(handler).run)
+
+    s = WSGIServer((CFG.http.host, CFG.http.port), app)
+    spawn(s.start)
 
 
 def main():
     run_forever(run_all)
 
-main()
+if __name__ == '__main__':
+    main()

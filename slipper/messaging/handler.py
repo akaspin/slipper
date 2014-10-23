@@ -1,14 +1,15 @@
 # coding=utf-8
 from abc import ABCMeta, abstractmethod
+from logging import getLogger
 
 from six import with_metaclass
 
-from slipper.env import getLogger
+from slipper.env import CFG
 from slipper.model.identity import compute_hash
 from slipper.model.primitives import Contract, Point
 from slipper.model import exc as model_exc
-from slipper.messaging.interface import interface as messaging
-from slipper.storage.interface import interface as storage
+from slipper.messaging.driver import DRIVER as MESSAGING
+from slipper.storage.driver import DRIVER as STORAGE
 
 
 CONTRACTS_NEW = 'contracts_new'
@@ -23,7 +24,7 @@ class AbstractHandler(with_metaclass(ABCMeta)):
     __SOURCE__ = None
 
     def __init__(self):
-        self.process_uuid = messaging.process_uuid
+        self.process_uuid = CFG.process_uuid
 
     @abstractmethod
     def accept(self, data, raw):
@@ -47,8 +48,8 @@ class ContractsNewHanler(AbstractHandler):
         if raw:
             raise model_exc.InvalidContractDataError(data=data)
         contract = Contract.from_serialized(data)
-        storage.adapter.create_contract(contract)
-        messaging.adapter.get_producer(INTERNAL).publish(contract.uid)
+        STORAGE.create_contract(contract)
+        MESSAGING.get_producer(INTERNAL).publish(contract.uid)
         LOG.debug('Contract added: %s', data)
 
 
@@ -60,7 +61,7 @@ class PointsNewHandler(AbstractHandler):
     def accept(self, data, raw):
         point = Point(uid=compute_hash(data)) if raw else \
             Point.from_serialized(data)
-        storage.adapter.update_point(point)
+        STORAGE.update_point(point)
 
 
 class InternalHandler(AbstractHandler):

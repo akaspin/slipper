@@ -1,19 +1,19 @@
 # coding=utf-8
-from __future__ import absolute_import
 
 from sqlalchemy.orm.exc import NoResultFound
 
 from slipper.model import primitives
-from slipper.storage.interface import AbstractStorageAdapter
-from slipper.storage.exc import NotUniqueError, NotFoundError
-from slipper.storage.sql.boot import Boot
-from slipper.storage.sql.transaction import with_transaction
-from slipper.storage.sql.schema import Contract, Point
+from slipper.storage.driver import AbstractStorageDriver
+from slipper.storage.exc import NotFoundError
+from slipper.storage.sql.transaction import with_transaction, engine
+from slipper.storage.sql.schema import Contract, Point, Base
 
 
-class MySQLAdapter(AbstractStorageAdapter):
+class MySQLDriver(AbstractStorageDriver):
 
-    __BOOT__ = Boot
+    def boot(self):
+        super(MySQLDriver, self).boot()
+        Base.metadata.create_all(engine)
 
     @classmethod
     @with_transaction()

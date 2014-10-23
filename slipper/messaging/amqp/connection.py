@@ -3,9 +3,9 @@
 from weakref import ref
 from kombu import connections, Connection
 
+from slipper.env import CFG
 from slipper.utils.decorators import cached_property
 from slipper.utils.platforms import detect_environment
-from slipper.messaging.interface import interface
 
 
 class HeartbeatMixin(object):
@@ -28,7 +28,7 @@ class HeartbeatMixin(object):
         spawn(heartbeat_check)
 
     def create_heartbeat(self, conn):
-        rate = interface.boot.heartbeat
+        rate = CFG.messaging.heartbeat
         if not conn.heartbeat or not conn.supports_heartbeats:
             return
         interval = conn.heartbeat / float(rate)
@@ -47,8 +47,8 @@ class ConnectibleMixin(object):
 
     @property
     def connections(self):
-        boot = interface.boot
-        return connections[Connection(boot.url, heartbeat=boot.heartbeat)]
+        return connections[Connection(
+            CFG.messaging.url, heartbeat=CFG.messaging.heartbeat)]
 
     @cached_property
     def connection(self):

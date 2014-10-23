@@ -10,7 +10,7 @@ setup(
     author_email='aka.spin@gmail.com',
     description='Task Flow',
     requires=[
-        'easydict', 'sqlalchemy', 'six', 'kombu', 'gevent', 'simplejson'
+        'easydict', 'sqlalchemy', 'six', 'kombu', 'gevent'
     ],
     package_data={
         'slipper': [
@@ -21,7 +21,8 @@ setup(
     zip_safe=False,
     entry_points={
         'console_scripts': [
-            'slipper-serve = slipper.serving.slipperd:main',
+            'slipper-serve = slipper.bin.serve:main',
+            'slipper-init = slipper.bin.init:main',
         ],
     },
 )

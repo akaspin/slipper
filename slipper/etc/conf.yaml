@@ -1,17 +1,31 @@
-# Messaging
-messaging:
-  use: kombu_pyamqp
-  kombu_pyamqp:
-    adapter: slipper.messaging.amqp.interface.AMQPAdapter
+drivers:
+  # Messaging
+  - &__messaging_kombu_pyamqp
+    driver: slipper.messaging.amqp.driver.KombuDriver
     url: pyamqp://admin:admin@localhost:5672//
     heartbeat: 1
 
-# Storage
-storage:
-  use: pymysql
-  pymysql:
-    adapter: slipper.storage.sql.interface.MySQLAdapter
+  # Storage
+  - &__storage_pymysql
+    driver: slipper.storage.sql.driver.MySQLDriver
     url: mysql+pymysql://root:root@127.0.0.1/slipper
+
+  # Logging
+  - &__logger_info
+    handlers: [console]
+    level: INFO
+    propagate: False
+
+
+http:
+  host: 0.0.0.0
+  port: 8080
+
+messaging:
+  <<: *__messaging_kombu_pyamqp
+
+storage:
+  <<: *__storage_pymysql
 
 # Logging
 logging:
@@ -31,15 +45,11 @@ logging:
   # to the loggers section with any even empty fields.
   loggers:
     slipper:
-      handlers: [console]
-      level: INFO
-      propagate: False
+      <<: *__logger_info
     kombu:
-      handlers: [console]
-      level: INFO
-      propagate: False
+      <<: *__logger_info
   root:
-    handlers: [console]
+    <<: *__logger_info
     level: WARNING
-    propagate: False
+
 

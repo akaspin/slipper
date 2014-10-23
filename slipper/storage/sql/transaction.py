@@ -1,15 +1,21 @@
 # coding=utf-8
 
 import functools
+import logging
 
 from six import reraise
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-from slipper.env import getLogger
-from slipper.storage.interface import interface
+from slipper.env import CFG
 
 
 #: Logging
-LOG = getLogger(__name__)
+LOG = logging.getLogger(__name__)
+
+
+engine = create_engine(CFG.storage.url)
+Session = sessionmaker(bind=engine)
 
 
 class Transaction(object):
@@ -36,7 +42,7 @@ class Transaction(object):
 
     def __enter__(self):
         if self.session is None:
-            self.session = interface.boot.Session(
+            self.session = Session(
                 autoflush=self.autoflush,
                 autocommit=self.autocommit)
         else:
