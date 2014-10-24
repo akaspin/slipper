@@ -69,3 +69,6 @@ class InternalHandler(AbstractHandler):
 
     def accept(self, data, raw):
         print self, data
+
+
+

@@ -35,6 +35,7 @@ exchanges = {
 queues = {
     'contracts_new': Queue(
         'slipper.contracts.new',
+        auto_delete=True,
         exchange=exchanges['contracts_new']),
     'internal': Queue(
         'slipper.contracts.schedule',
