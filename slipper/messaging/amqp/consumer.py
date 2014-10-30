@@ -13,11 +13,12 @@ LOG = env.getLogger(__name__)
 
 
 class Consumer(ConnectibleMixin, HeartbeatMixin, ConsumerMixin):
-    """Abstact Consumer."""
+    """Consumer."""
 
     def __init__(self, callback, queue):
         """
         :param callback: Callback handler.
+        :param queue: Queue.
         """
         self.callback = callback
         self.queue = queue

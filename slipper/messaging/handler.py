@@ -5,16 +5,14 @@ from logging import getLogger
 from six import with_metaclass
 
 from slipper.env import CFG
+from slipper.utils.decorators import cached_property
+
 from slipper.model.identity import compute_hash
 from slipper.model.primitives import Contract, Point
 from slipper.model import exc as model_exc
 from slipper.messaging.driver import DRIVER as MESSAGING
 from slipper.storage.driver import DRIVER as STORAGE
 
-
-CONTRACTS_NEW = 'contracts_new'
-INTERNAL = 'internal'
-POINTS_NEW = 'points_new'
 
 LOG = getLogger(__name__)
 
@@ -42,21 +40,25 @@ class AbstractHandler(with_metaclass(ABCMeta)):
 class ContractsNewHanler(AbstractHandler):
     """Handler to register new contract."""
 
-    __SOURCE__ = CONTRACTS_NEW
+    __SOURCE__ = ('contracts', 'new')
 
     def accept(self, data, raw):
         if raw:
             raise model_exc.InvalidContractDataError(data=data)
         contract = Contract.from_serialized(data)
         STORAGE.create_contract(contract)
-        MESSAGING.get_producer(INTERNAL).publish(contract.uid)
+        self._schedule_producer.publish(contract.uid)
         LOG.debug('Contract added: %s', data)
+
+    @cached_property
+    def _schedule_producer(self):
+        return MESSAGING.get_producer(('contracts', 'schedule'))
 
 
 class PointsNewHandler(AbstractHandler):
     """Handler to accept points notifications."""
 
-    __SOURCE__ = 'points_new'
+    __SOURCE__ = ('points', 'new')
 
     def accept(self, data, raw):
         point = Point(uid=compute_hash(data)) if raw else \
@@ -64,11 +66,15 @@ class PointsNewHandler(AbstractHandler):
         STORAGE.update_point(point)
 
 
-class InternalHandler(AbstractHandler):
-    __SOURCE__ = 'internal'
+class ScheduleHandler(AbstractHandler):
+    __SOURCE__ = ('contracts', 'schedule')
 
     def accept(self, data, raw):
         print self, data
 
 
+class WaiterHandler(AbstractHandler):
+    __SOURCE__ = ('points', None)
 
+    def accept(self, data, raw):
+        print self, data

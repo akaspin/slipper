@@ -14,7 +14,7 @@ from slipper.http.handler import app
 
 from slipper.messaging.driver import DRIVER
 from slipper.messaging.handler import ContractsNewHanler, PointsNewHandler, \
-    InternalHandler
+    ScheduleHandler, WaiterHandler
 
 
 CFG(os.environ.get('SLIPPER_CONFIG'))
@@ -32,7 +32,8 @@ def run_forever(cb):
 
 
 def run_all():
-    for handler in [ContractsNewHanler, PointsNewHandler, InternalHandler]:
+    for handler in [ContractsNewHanler, PointsNewHandler,
+                    ScheduleHandler, WaiterHandler]:
         spawn(DRIVER.get_consumer(handler).run)
 
     s = WSGIServer((CFG.http.host, CFG.http.port), app)

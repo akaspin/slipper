@@ -13,7 +13,7 @@ drivers:
   # Logging
   - &__logger_info
     handlers: [console]
-    level: INFO
+    level: DEBUG
     propagate: False
 
 

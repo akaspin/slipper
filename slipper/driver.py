@@ -10,7 +10,6 @@ from slipper.utils.imports import class_for_name
 
 class AbstractDriver(with_metaclass(ABCMeta)):
 
-    @abstractmethod
     def boot(self):
         pass
 

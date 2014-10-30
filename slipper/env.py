@@ -26,7 +26,7 @@ class _Config(dict):
             self.process_uuid = uuid.uuid4().hex
             dictConfig(self.logging)
             getLogger(__name__).debug(
-                'Configuration for loaded from %s.',
+                'Configuration for %s loaded from %s.',
                 self.process_uuid[:8],
                 filename)
 

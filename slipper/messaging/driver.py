@@ -21,7 +21,10 @@ class AbstractMessagingDriver(AbstractDriver):
 
     @abstractmethod
     def get_producer(self, destination):
-        """Get producer"""
+        """Get producer for concrete destination.
+
+        :param str destination: Destination.
+        """
 
 
 DRIVER = PromiseProxy(lambda: get_driver('messaging')())
