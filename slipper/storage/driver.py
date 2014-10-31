@@ -22,11 +22,10 @@ class AbstractStorageDriver(AbstractDriver):
 
     @classmethod
     @abstractmethod
-    def get_contract(cls, uid, sub_hash):
+    def get_contract(cls, uid):
         """Get contract from storage.
 
         :param str uid: Contract UID.
-        :param str sub_hash: Subcontract HASH.
         :rtype: :py:class:`slipper.model.primitives.Contract`
         :raises :py:class:`slipper.storage.exc.NotFoundError`:
             When contract not found.
@@ -34,7 +33,7 @@ class AbstractStorageDriver(AbstractDriver):
 
     @classmethod
     @abstractmethod
-    def delete_contract(cls, uid, sub_hash):
+    def delete_contract(cls, uid):
         """Delete existing contract.
 
         :param str uid: Contract UID.

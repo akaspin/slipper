@@ -57,7 +57,7 @@ class Transaction(object):
                 LOG.debug('%s, Recoverable: %s, %s',
                             self.__by_level(), exc_type, exc_val)
                 return self.__commit()
-        LOG.debug('%s FAIL: %s, %s', self.__by_level(), exc_type, exc_val)
+        LOG.warn('%s FAIL: %s, %s', self.__by_level(), exc_type, exc_val)
         self.session.rollback()
         if self.__check_error(exc_type, self.no_raise):
             return True

@@ -24,30 +24,22 @@ class MySQLDriver(AbstractStorageDriver):
         :type contract: :py:class:`slipper.model.primitives.Contract`
         :raises NotUniqueError: If contract already exists.
         """
-        Contract(
-            uid=contract.uid,
-            timeout=contract.timeout,
-            sub_hash=contract.sub_hash,
-            strict=contract.strict,
-            route=contract.route,
-            payload=contract.payload,
-            points=[Point(
-                uid=p.uid,
-                contract_uid=contract.uid,
-                state=p.state,
-                worker=p.worker,
-                dt_activity=p.dt_activity,
-                dt_finish=p.dt_finish,
-                payload=p.payload
-            ) for p in contract.points]
-        ).store(session=session)
+        points = Point.make_points(contract.points, session=session)
+        c = Contract(uid=contract.uid,
+                     timeout=contract.timeout,
+                     strict=contract.strict,
+                     route=contract.route,
+                     payload=contract.payload)
+        session.add(c)
+        c.points = points
+        session.flush()
 
     @classmethod
     @with_transaction()
-    def get_contract(cls, uid, sub_hash, session=None):
+    def get_contract(cls, uid, session=None):
         try:
             res = (session.query(Contract)
-                   .filter(Contract.uid == uid, Contract.sub_hash == sub_hash)
+                   .filter(Contract.uid == uid)
                    .one())
             return primitives.Contract(
                 points=[primitives.Point(
@@ -64,16 +56,17 @@ class MySQLDriver(AbstractStorageDriver):
                 payload=res.payload
             )
         except NoResultFound:
-            raise NotFoundError(entity=Contract, uid='-'.join([uid, sub_hash]))
+            raise NotFoundError(entity=Contract, uid=uid)
 
     @classmethod
     @with_transaction()
-    def delete_contract(cls, uid, sub_hash, session=None):
+    def delete_contract(cls, uid, session=None):
         res = session.query(Contract).filter(
-            Contract.uid == uid, Contract.sub_hash == sub_hash
-        ).delete()
-        if res != 1:
-            raise NotFoundError(entity=Contract, uid='-'.join([uid, sub_hash]))
+            Contract.uid == uid).one()
+        session.delete(res)
+        for point in res.points:
+            if len(point.contracts) == 1 and point.contracts[0] == res:
+                session.delete(point)
 
     @classmethod
     @with_transaction()

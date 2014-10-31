@@ -1,17 +1,20 @@
 # coding=utf-8
 from __future__ import absolute_import
 
+import uuid
 from abc import ABCMeta, abstractmethod, abstractproperty
 from datetime import datetime, timedelta
-from operator import itemgetter, attrgetter
+from operator import attrgetter
 
 from six import with_metaclass
 
-from .identity import compute_hash
 from slipper.model.exc import InvalidContractDataError, InvalidPointData
 
 
 class Serializable(with_metaclass(ABCMeta)):
+
+    def __init__(self, uid=None):
+        self.uid = uid or uuid.uuid4()
 
     @classmethod
     @abstractmethod
@@ -33,18 +36,19 @@ class Serializable(with_metaclass(ABCMeta)):
 class Point(Serializable):
     """Contract point."""
 
-    def __init__(self, uid, state=None, worker=None,
+    def __init__(self, uid=None, state=None, worker=None,
                  dt_activity=None, dt_finish=None, payload=None):
         """
-        :param str uid: Point UID.
+        :param uid: Point UID.
+        :type uid: :py:class:`uuid.UUID`
         :param int state: (optional) Point state. ``None`` means none
             (surprise!). Zero state means success. Any other is error code.
         :param datetime dt_activity: (optional) Last activity datetime.
         :param datetime dt_finish: (optional) Finish datetime.
         :param dict payload: (optional) Metadata.
         """
-        super(Point, self).__init__()
-        self.uid = uid
+        super(Point, self).__init__(uid)
+        self.uid = uid or uuid.uuid4()
         self.state = state
         self.worker = worker
         self.payload = payload
@@ -71,7 +75,7 @@ class Point(Serializable):
     @classmethod
     def from_serialized(cls, data):
         return cls(
-            data['uid'],
+            uuid.UUID(data['uid']),
             state=data.get('state'),
             worker=data.get('worker'),
             payload=data.get('payload'),
@@ -81,7 +85,7 @@ class Point(Serializable):
 
     @property
     def serialized(self):
-        return dict(uid=self.uid,
+        return dict(uid=str(self.uid),
                     state=self.state,
                     worker=self.worker,
                     dt_activity=self.to_timestamp(self.dt_activity),
@@ -113,9 +117,11 @@ class Contract(Serializable):
     #: Dependencies failed
     FAILED = 1
 
-    def __init__(self, points, timeout, route=None,
+    def __init__(self, points, timeout, uid=None, route=None,
                  strict=False, payload=None):
         """
+        :param uid: Contract ID.
+        :type uid: :py:class:`uuid.UUID`
         :param points: Contract points.
         :type points: list[:py:class:`slipper.model.primitives.Point`]
         :param int timeout: Last activity timeout.
@@ -125,14 +131,14 @@ class Contract(Serializable):
             fail on first failed point. Default is ``False``
         :param str payload: (optional) Payload.
         """
-
+        super(Contract, self).__init__(uid)
         self.points = sorted(points, key=attrgetter('uid'))
         self.timeout = timeout
         self.strict = strict
         self.route = route
         self.payload = payload
         # Check base contract
-        if route is None and (strict or payload is not None):
+        if route is None and strict:
             raise InvalidContractDataError(data=self.serialized)
 
     @property
@@ -156,16 +162,6 @@ class Contract(Serializable):
                 return self.FAILED
         if None not in res:
             return self.FAILED if any(s != 0 for s in res) else self.OK
-
-    @property
-    def uid(self):
-        """Contract UID"""
-        return compute_hash(*(point.uid for point in self.points))
-
-    @property
-    def sub_hash(self):
-        """Contract sub hash."""
-        return compute_hash(self.route, self.strict, self.payload)
 
     @classmethod
     def from_serialized(cls, data):

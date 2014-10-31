@@ -1,14 +1,14 @@
 # coding=utf-8
 from __future__ import absolute_import
 
-from sqlalchemy import Column, ForeignKeyConstraint
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, ForeignKeyConstraint, ForeignKey
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.types import Text, DateTime, Boolean, String, Integer
 
 from slipper.storage.exc import NotUniqueError
-from slipper.storage.sql.types import HASH
+from slipper.storage.sql.types import HASH, UUID
 from slipper.storage.sql.transaction import with_transaction
 
 
@@ -40,15 +40,11 @@ class Contract(Base, StorableMixin):
     __tablename__ = 'contracts'
 
     #: Contract UID
-    uid = Column('uid', HASH, nullable=False, unique=False,
+    uid = Column('uid', UUID, nullable=False, unique=False,
                  primary_key=True)
 
     #: Last activity timeout.
     timeout = Column('timeout', Integer, nullable=False, index=True)
-
-    #: Metadata hash from `is_greedy`, `route` and `payload`.
-    sub_hash = Column('sub_hash', HASH, nullable=False,
-                      unique=False, primary_key=True)
 
     #: Behaviour.
     strict = Column('strict', Boolean, nullable=False, default=False)
@@ -61,7 +57,9 @@ class Contract(Base, StorableMixin):
 
     #: Bindings relationship.
     points = relationship('slipper.storage.sql.schema.Point',
-                          lazy='joined', backref='contract')
+                          secondary='contract_point_links',
+                          lazy='joined',
+                          backref=backref('contracts',))
 
     @with_transaction()
     def is_exists(self, session=None):
@@ -75,17 +73,7 @@ class Point(Base, StorableMixin):
     __tablename__ = 'points'
 
     #: Point UID. SHA1 hash.
-    uid = Column('uid', HASH, primary_key=True)
-
-    #: Contract UID.
-    contract_uid = Column('contract_uid', HASH,
-                          # ForeignKey(Contract.uid, ondelete='CASCADE'),
-                          nullable=False, unique=False,
-                          primary_key=True)
-
-    #: Metadata hash from `is_greedy`, `route` and `payload`.
-    sub_hash = Column('sub_hash', HASH, nullable=False,
-                      unique=False, primary_key=True)
+    uid = Column('uid', UUID, primary_key=True)
 
     #: Point state. ``None`` means what interest being processed.
     #: Zero value - OK. Any positive value is error code.
@@ -104,19 +92,42 @@ class Point(Base, StorableMixin):
 
     payload = Column('payload', Text, nullable=True)
 
-    __table_args__ = (
-        ForeignKeyConstraint([contract_uid, sub_hash],
-                             [Contract.uid, Contract.sub_hash],
-                             ondelete='CASCADE'),
-    )
-
+    @classmethod
     @with_transaction()
-    def is_exists(self, session=None):
-        return (session.query(Point.uid)
-                .filter(Point.uid == self.uid).first()) is not None
+    def get_by_uids(cls, uids, session=None):
+        """Get points by UIDs."""
+        return session.query(cls).filter(cls.uid.in_(uids)).all()
 
+    @classmethod
     @with_transaction()
-    def report(self):
-        """Update point info"""
+    def make_points(cls, points, session=None):
+        """Make points or return existing."""
+        existent = cls.get_by_uids(uids=[p.uid for p in points],
+                                   session=session)
+        for point in existent:
+            session.merge(point)
+        existent_uids = [p.uid for p in existent]
+        new_points = [Point(
+            uid=p.uid,
+            state=p.state,
+            worker=p.worker,
+            dt_activity=p.dt_activity,
+            dt_finish=p.dt_finish,
+            payload=p.dt_finish
+        ) for p in points if p.uid not in existent_uids]
+        session.add_all(new_points)
+        return existent + new_points
 
+
+class Link(Base, StorableMixin):
+    """Points to contracts bindings."""
+
+    __tablename__ = 'contract_point_links'
+
+    contract_uid = Column('contract_uid', UUID,
+                          ForeignKey(Contract.uid, ondelete='CASCADE'),
+                          primary_key=True)
+    point_uid = Column('point_uid', UUID,
+                       ForeignKey(Point.uid, ondelete='CASCADE'),
+                       primary_key=True)
 

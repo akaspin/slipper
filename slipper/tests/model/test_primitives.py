@@ -3,22 +3,22 @@
 import unittest
 
 from datetime import datetime
+import uuid
 
-from slipper.model.identity import compute_hash
 from slipper.model.primitives import Contract, Point
 
 
 class PointTestCase(unittest.TestCase, object):
 
     def setUp(self):
-        self.name = 'test'
+        self.uuid = uuid.uuid4()
         self.dt_activity = datetime.utcnow()
-        self.fixture = Point(compute_hash(self.name),
+        self.fixture = Point(self.uuid,
                              dt_activity=self.dt_activity)
 
     def test_serialize(self):
         fixture = {'state': None,
-                   'uid': compute_hash(self.name),
+                   'uid': str(self.uuid),
                    'dt_finish': None,
                    'worker': None,
                    'dt_activity': Point.to_timestamp(self.dt_activity),
@@ -28,7 +28,7 @@ class PointTestCase(unittest.TestCase, object):
     def test_from_serialized(self):
         fixture = {'state': 35,
                    'worker': None,
-                   'uid': compute_hash(self.name),
+                   'uid': str(self.uuid),
                    'dt_finish': Point.to_timestamp(self.dt_activity),
                    'dt_activity': Point.to_timestamp(self.dt_activity),
                    'payload': None}
@@ -71,7 +71,7 @@ class StrictContractTestCase(TestBase.ContainerTestBase):
 
     def get_contract(self):
         return Contract(
-            points=[Point(compute_hash(i)) for i in ['a', 'b', 'c']],
+            points=[Point() for _ in range(3)],
             timeout=30,
             route='strict',
             strict=True
@@ -86,7 +86,7 @@ class NonStrictContractTestCase(TestBase.ContainerTestBase):
 
     def get_contract(self):
         return Contract(
-            points=[Point(compute_hash(i)) for i in ['a', 'b', 'c']],
+            points=[Point() for _ in range(3)],
             timeout=30,
         )
 

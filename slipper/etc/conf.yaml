@@ -50,6 +50,6 @@ logging:
       <<: *__logger_info
   root:
     <<: *__logger_info
-    level: WARNING
+    level: INFO
 
 
