@@ -1,7 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import
 
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from slipper.model import primitives
 from slipper.model.identity import compute_hash
@@ -20,8 +20,12 @@ class IntersectedTestCase(DBTestBase):
                                              timeout=30)
         self.contract2 = primitives.Contract(points=self.points[2:],
                                              timeout=30)
+        self.maxDiff = 1000
 
-    def test_create(self):
+    def atest_create(self):
+        self.points[2].state = 2
+        self.points[2].payload = {'2': 4}
+        self.points[2].dt_finish = datetime.utcnow()
         DRIVER.create_contract(self.contract1)
         DRIVER.create_contract(self.contract2)
         self.assertDictEqual(
@@ -37,51 +41,3 @@ class IntersectedTestCase(DBTestBase):
         DRIVER.delete_contract(self.contract2.uid)
 
 
-
-
-
-
-class StorageTest(DBTestBase):
-
-
-
-
-    def atest_create_delete(self):
-        """Create and delete two contracts."""
-        points = [primitives.Point(uid=compute_hash(d))
-                  for d in ['a', 'b', 'c']]
-        c1 = primitives.Contract(
-            timeout=timedelta(hours=1).seconds,
-            route='abs1',
-            points=points,
-        )
-        c2 = primitives.Contract(
-            timeout=timedelta(hours=1).seconds,
-            points=points,
-        )
-        DRIVER.create_contract(c1)
-        DRIVER.create_contract(c2)
-        DRIVER.delete_contract(c1.uid, c1.sub_hash)
-        with self.assertRaises(exc.NotFoundError):
-            DRIVER.get_contract(c1.uid, c1.sub_hash)
-        with self.assertRaises(exc.NotFoundError):
-            DRIVER.delete_contract(c1.uid, c1.sub_hash)
-
-    def atest_update_point(self):
-        c = primitives.Contract(
-            timeout=timedelta(hours=1).seconds,
-            route='abs1',
-            points=[primitives.Point(uid=compute_hash(d))
-                    for d in ['a', 'b', 'c']],
-        )
-        DRIVER.create_contract(c)
-        new_point = primitives.Point(uid=compute_hash('a'), state=34)
-        DRIVER.update_point(new_point)
-        res = DRIVER.get_contract(c.uid, c.sub_hash)
-        for p in res.points:
-            if p.uid == new_point.uid:
-                self.assertEqual(p.state, 34)
-
-    def stest_update_non_existent_point(self):
-        with self.assertRaises(exc.NotFoundError):
-            DRIVER.update_point(primitives.Point(uid=compute_hash('F')))

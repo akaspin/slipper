@@ -55,7 +55,7 @@ class Transaction(object):
         for nr in self.commit_on:
             if exc_type is nr or issubclass(exc_type, nr):
                 LOG.debug('%s, Recoverable: %s, %s',
-                            self.__by_level(), exc_type, exc_val)
+                          self.__by_level(), exc_type, exc_val)
                 return self.__commit()
         LOG.warn('%s FAIL: %s, %s', self.__by_level(), exc_type, exc_val)
         self.session.rollback()

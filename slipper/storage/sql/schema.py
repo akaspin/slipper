@@ -8,7 +8,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.types import Text, DateTime, Boolean, String, Integer
 
 from slipper.storage.exc import NotUniqueError
-from slipper.storage.sql.types import HASH, UUID
+from slipper.storage.sql.types import HASH, UUID, JSON
 from slipper.storage.sql.transaction import with_transaction
 
 
@@ -61,10 +61,16 @@ class Contract(Base, StorableMixin):
                           lazy='joined',
                           backref=backref('contracts',))
 
+    @classmethod
     @with_transaction()
-    def is_exists(self, session=None):
-        return (session.query(Contract.uid)
-                .filter(Contract.uid == self.uid).first()) is not None
+    def create(cls, contract, session=None):
+        session.execute(cls.__table__.insert(), [{
+            'uid': contract.uid,
+            'timeout': contract.timeout,
+            'strict': contract.strict,
+            'route': contract.route,
+            'payload': contract.payload
+        }])
 
 
 class Point(Base, StorableMixin):
@@ -90,7 +96,7 @@ class Point(Base, StorableMixin):
     dt_finish = Column('dt_finish', DateTime, nullable=True, index=True,
                        default=None)
 
-    payload = Column('payload', Text, nullable=True)
+    payload = Column('payload', JSON, nullable=True)
 
     @classmethod
     @with_transaction()
@@ -100,23 +106,16 @@ class Point(Base, StorableMixin):
 
     @classmethod
     @with_transaction()
-    def make_points(cls, points, session=None):
-        """Make points or return existing."""
-        existent = cls.get_by_uids(uids=[p.uid for p in points],
-                                   session=session)
-        for point in existent:
-            session.merge(point)
-        existent_uids = [p.uid for p in existent]
-        new_points = [Point(
-            uid=p.uid,
-            state=p.state,
-            worker=p.worker,
-            dt_activity=p.dt_activity,
-            dt_finish=p.dt_finish,
-            payload=p.dt_finish
-        ) for p in points if p.uid not in existent_uids]
-        session.add_all(new_points)
-        return existent + new_points
+    def create(cls, points, session=None):
+        """Create points."""
+        session.execute(cls.__table__.insert().prefix_with("IGNORE"), [{
+            'uid': point.uid.hex,
+            'state': point.state,
+            'worker': point.worker,
+            'dt_activity': point.dt_activity,
+            'dt_finish': point.dt_finish,
+            'payload': point.payload
+        } for point in points])
 
 
 class Link(Base, StorableMixin):
@@ -128,6 +127,13 @@ class Link(Base, StorableMixin):
                           ForeignKey(Contract.uid, ondelete='CASCADE'),
                           primary_key=True)
     point_uid = Column('point_uid', UUID,
-                       ForeignKey(Point.uid, ondelete='CASCADE'),
+                       ForeignKey(Point.uid, ondelete='RESTRICT'),
                        primary_key=True)
 
+    @classmethod
+    @with_transaction()
+    def create(cls, contract, session=None):
+        session.execute(cls.__table__.insert(), [{
+            'contract_uid': contract.uid,
+            'point_uid': point.uid
+        } for point in contract.points])

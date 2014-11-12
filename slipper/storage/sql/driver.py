@@ -6,7 +6,7 @@ from slipper.model import primitives
 from slipper.storage.driver import AbstractStorageDriver
 from slipper.storage.exc import NotFoundError
 from slipper.storage.sql.transaction import with_transaction, engine
-from slipper.storage.sql.schema import Contract, Point, Base
+from slipper.storage.sql.schema import Contract, Point, Link, Base
 
 
 class MySQLDriver(AbstractStorageDriver):
@@ -24,15 +24,9 @@ class MySQLDriver(AbstractStorageDriver):
         :type contract: :py:class:`slipper.model.primitives.Contract`
         :raises NotUniqueError: If contract already exists.
         """
-        points = Point.make_points(contract.points, session=session)
-        c = Contract(uid=contract.uid,
-                     timeout=contract.timeout,
-                     strict=contract.strict,
-                     route=contract.route,
-                     payload=contract.payload)
-        session.add(c)
-        c.points = points
-        session.flush()
+        Point.create(contract.points, session=session)
+        Contract.create(contract, session=session)
+        Link.create(contract, session=session)
 
     @classmethod
     @with_transaction()

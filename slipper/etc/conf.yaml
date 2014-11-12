@@ -13,7 +13,7 @@ drivers:
   # Logging
   - &__logger_info
     handlers: [console]
-    level: DEBUG
+    level: INFO
     propagate: False
 
 
@@ -48,6 +48,10 @@ logging:
       <<: *__logger_info
     kombu:
       <<: *__logger_info
+    sqlalchemy.engine:
+      <<: *__logger_info
+      level: ERROR
+
   root:
     <<: *__logger_info
     level: INFO
