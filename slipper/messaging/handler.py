@@ -7,8 +7,7 @@ from six import with_metaclass
 from slipper.env import CFG
 from slipper.utils.decorators import cached_property
 
-from slipper.model.identity import compute_hash
-from slipper.model.primitives import Contract, Point
+from slipper.model.primitives import Contract, Point, compute_hash
 from slipper.model import exc as model_exc
 from slipper.messaging.driver import DRIVER as MESSAGING
 from slipper.storage.driver import DRIVER as STORAGE

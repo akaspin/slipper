@@ -1,20 +1,33 @@
 # coding=utf-8
 from __future__ import absolute_import
 
-import uuid
 from abc import ABCMeta, abstractmethod, abstractproperty
 from datetime import datetime, timedelta
+import hashlib
 from operator import attrgetter
+import uuid
 
 from six import with_metaclass
 
 from slipper.model.exc import InvalidContractDataError, InvalidPointData
 
 
+def compute_hash(*args):
+    """Compute hash from args.
+
+    :rtype: str
+    """
+    res = hashlib.sha1()
+    for chunk in args:
+        res.update(str(chunk))
+    return res.hexdigest()
+
+
 class Serializable(with_metaclass(ABCMeta)):
 
-    def __init__(self, uid=None):
-        self.uid = uid or uuid.uuid4()
+    @abstractproperty
+    def uid(self):
+        """UID"""
 
     @classmethod
     @abstractmethod
@@ -36,19 +49,18 @@ class Serializable(with_metaclass(ABCMeta)):
 class Point(Serializable):
     """Contract point."""
 
-    def __init__(self, uid=None, state=None, worker=None,
+    def __init__(self, uid, state=None, worker=None,
                  dt_activity=None, dt_finish=None, payload=None):
         """
-        :param uid: Point UID.
-        :type uid: :py:class:`uuid.UUID`
-        :param int state: (optional) Point state. ``None`` means none
-            (surprise!). Zero state means success. Any other is error code.
+        :param str uid: Point UID. SHA1 hash.
+        :param int state: (optional) Point state. ``None`` means none.
+            Zero state means success. Any other is error code.
         :param datetime dt_activity: (optional) Last activity datetime.
         :param datetime dt_finish: (optional) Finish datetime.
-        :param dict payload: (optional) Metadata.
+        :param dict payload: (optional) Point payload.
         """
-        super(Point, self).__init__(uid)
-        self.uid = uid or uuid.uuid4()
+        super(Point, self).__init__()
+        self._uid = uid
         self.state = state
         self.worker = worker
         self.payload = payload
@@ -58,6 +70,10 @@ class Point(Serializable):
             self.dt_activity = dt_activity or datetime.utcnow()
         elif dt_finish is None and state is not None:
             self.dt_finish = dt_finish or datetime.utcnow()
+
+    @property
+    def uid(self):
+        return self._uid
 
     def get_state(self, timeout):
         """Get point state.
@@ -75,7 +91,7 @@ class Point(Serializable):
     @classmethod
     def from_serialized(cls, data):
         return cls(
-            uuid.UUID(data['uid']),
+            data['uid'],
             state=data.get('state'),
             worker=data.get('worker'),
             payload=data.get('payload'),
@@ -85,7 +101,7 @@ class Point(Serializable):
 
     @property
     def serialized(self):
-        return dict(uid=str(self.uid),
+        return dict(uid=self.uid,
                     state=self.state,
                     worker=self.worker,
                     dt_activity=self.to_timestamp(self.dt_activity),
@@ -93,7 +109,7 @@ class Point(Serializable):
                     payload=self.payload)
 
     @staticmethod
-    def to_timestamp(dt, epoch=datetime(1970,1,1)):
+    def to_timestamp(dt, epoch=datetime(1970, 1, 1)):
         if dt is not None:
             td = dt - epoch
             return round(td.total_seconds())
@@ -117,11 +133,9 @@ class Contract(Serializable):
     #: Dependencies failed
     FAILED = 1
 
-    def __init__(self, points, timeout, uid=None, route=None,
+    def __init__(self, points, timeout, route=None,
                  strict=False, payload=None):
         """
-        :param uid: Contract ID.
-        :type uid: :py:class:`uuid.UUID`
         :param points: Contract points.
         :type points: list[:py:class:`slipper.model.primitives.Point`]
         :param int timeout: Last activity timeout.
@@ -129,17 +143,19 @@ class Contract(Serializable):
             contract report. Default is ``None``
         :param bool strict: (optional) Strict behaviour. Strict contracts
             fail on first failed point. Default is ``False``
-        :param str payload: (optional) Payload.
+        :param payload: (optional) Payload.
         """
-        super(Contract, self).__init__(uid)
+        super(Contract, self).__init__()
         self.points = sorted(points, key=attrgetter('uid'))
         self.timeout = timeout
         self.strict = strict
         self.route = route
         self.payload = payload
-        # Check base contract
-        if route is None and strict:
-            raise InvalidContractDataError(data=self.serialized)
+
+    @property
+    def uid(self):
+        points_uid = compute_hash(point.uid for point in self.points)
+        return compute_hash(points_uid, self.timeout, self.strict, self.route)
 
     @property
     def state(self):
@@ -177,6 +193,7 @@ class Contract(Serializable):
     @property
     def serialized(self):
         return {
+            'uid': self.uid,
             'points': [p.serialized for p in self.points],
             'timeout': self.timeout,
             'strict': self.strict,
@@ -196,4 +213,3 @@ class Contract(Serializable):
             payload={'points': [p.serialized for p in self.points],
                      'payload': self.payload}
         ).serialized
-

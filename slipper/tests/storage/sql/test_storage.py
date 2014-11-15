@@ -4,7 +4,7 @@ from __future__ import absolute_import
 from datetime import timedelta, datetime
 
 from slipper.model import primitives
-from slipper.model.identity import compute_hash
+from slipper.model.primitives import compute_hash
 from slipper.storage.driver import DRIVER
 from slipper.storage import exc
 

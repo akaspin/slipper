@@ -2,7 +2,7 @@
 
 import unittest
 
-from slipper.model.identity import compute_hash
+from slipper.model.primitives import compute_hash
 
 
 class UIDTest(unittest.TestCase, object):
