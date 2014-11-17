@@ -94,3 +94,30 @@ class NonStrictContractTestCase(TestBase.ContainerTestBase):
         self.contract.points[0].state = 2
         self.assertEqual(self.contract.state, None)
 
+
+class ContractSignatureTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.points = [Point(compute_hash(i)) for i in range(6)]
+
+    def test_different_points(self):
+        c1 = Contract(
+            points=self.points[:3],
+            timeout=30,
+        )
+        c2 = Contract(
+            points=self.points[2:],
+            timeout=30,
+        )
+        self.assertNotEqual(c1.uid, c2.uid)
+
+    def test_different_meta(self):
+        c1 = Contract(
+            points=self.points,
+            timeout=30,
+        )
+        c2 = Contract(
+            points=self.points,
+            timeout=40,
+        )
+        self.assertNotEqual(c1.uid, c2.uid)

@@ -8,40 +8,20 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.types import Text, DateTime, Boolean, String, Integer
 
 from slipper.storage.exc import NotUniqueError
-from slipper.storage.sql.types import HASH, UUID, JSON
+from slipper.storage.sql.types import SHA1, UUID, JSON
 from slipper.storage.sql.transaction import with_transaction
 
 
 Base = declarative_base()
 
 
-class StorableMixin(object):
-    """StorableMixin model."""
-
-    def __init__(self, **kwargs):
-        super(StorableMixin, self).__init__()
-
-    @with_transaction()
-    def store(self, session=None):
-        """Store object.
-
-        :raises NotUniqueError: If object already exists.
-        """
-        try:
-            session.add(self)
-            session.flush()
-        except IntegrityError:
-            raise NotUniqueError(entity=self, uid=self.uid)
-
-
-class Contract(Base, StorableMixin):
+class Contract(Base):
     """Contract."""
 
     __tablename__ = 'contracts'
 
     #: Contract UID
-    uid = Column('uid', UUID, nullable=False, unique=False,
-                 primary_key=True)
+    uid = Column('uid', SHA1, nullable=False, primary_key=True)
 
     #: Last activity timeout.
     timeout = Column('timeout', Integer, nullable=False, index=True)
@@ -73,13 +53,13 @@ class Contract(Base, StorableMixin):
         }])
 
 
-class Point(Base, StorableMixin):
+class Point(Base):
     """Points."""
 
     __tablename__ = 'points'
 
     #: Point UID. SHA1 hash.
-    uid = Column('uid', UUID, primary_key=True)
+    uid = Column('uid', SHA1, primary_key=True)
 
     #: Point state. ``None`` means what interest being processed.
     #: Zero value - OK. Any positive value is error code.
@@ -87,7 +67,7 @@ class Point(Base, StorableMixin):
                    default=None)
 
     #: Worker. Used only for native behaviour.
-    worker = Column('worker', HASH, nullable=True, index=True, default=None)
+    worker = Column('worker', SHA1, nullable=True, index=True, default=None)
 
     #: Last activity. In non-native behaviour is contract creation.
     dt_activity = Column('dt_activity', DateTime, nullable=False, index=True)
@@ -100,16 +80,10 @@ class Point(Base, StorableMixin):
 
     @classmethod
     @with_transaction()
-    def get_by_uids(cls, uids, session=None):
-        """Get points by UIDs."""
-        return session.query(cls).filter(cls.uid.in_(uids)).all()
-
-    @classmethod
-    @with_transaction()
     def create(cls, points, session=None):
         """Create points."""
         session.execute(cls.__table__.insert().prefix_with("IGNORE"), [{
-            'uid': point.uid.hex,
+            'uid': point.uid,
             'state': point.state,
             'worker': point.worker,
             'dt_activity': point.dt_activity,
@@ -118,16 +92,16 @@ class Point(Base, StorableMixin):
         } for point in points])
 
 
-class Link(Base, StorableMixin):
+class Link(Base):
     """Points to contracts bindings."""
 
     __tablename__ = 'contract_point_links'
 
-    contract_uid = Column('contract_uid', UUID,
+    contract_uid = Column('contract_uid', SHA1,
                           ForeignKey(Contract.uid, ondelete='CASCADE'),
                           primary_key=True)
-    point_uid = Column('point_uid', UUID,
-                       ForeignKey(Point.uid, ondelete='RESTRICT'),
+    point_uid = Column('point_uid', SHA1,
+                       ForeignKey(Point.uid, ondelete='CASCADE'),
                        primary_key=True)
 
     @classmethod

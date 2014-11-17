@@ -1,5 +1,6 @@
 # coding=utf-8
 
+from sqlalchemy.sql.expression import exists, select
 from sqlalchemy.orm.exc import NoResultFound
 
 from slipper.model import primitives
@@ -55,12 +56,19 @@ class MySQLDriver(AbstractStorageDriver):
     @classmethod
     @with_transaction()
     def delete_contract(cls, uid, session=None):
-        res = session.query(Contract).filter(
-            Contract.uid == uid).one()
-        session.delete(res)
-        for point in res.points:
-            if len(point.contracts) == 1 and point.contracts[0] == res:
-                session.delete(point)
+        sql = '''
+          DELETE points.*, contracts.* FROM points
+            JOIN contract_point_links as l ON points.uid = l.point_uid
+            LEFT OUTER JOIN contracts ON contracts.uid = l.contract_uid
+            WHERE
+              l.contract_uid = UNHEX(:contract_uid)
+              AND EXISTS (
+                SELECT 1 FROM contract_point_links as l
+                  WHERE l.point_uid = points.uid
+                  GROUP BY l.point_uid
+                  HAVING COUNT(l.point_uid) = 1);
+        '''
+        session.execute(sql, {'contract_uid': uid})
 
     @classmethod
     @with_transaction()

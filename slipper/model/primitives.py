@@ -154,8 +154,9 @@ class Contract(Serializable):
 
     @property
     def uid(self):
-        points_uid = compute_hash(point.uid for point in self.points)
-        return compute_hash(points_uid, self.timeout, self.strict, self.route)
+        return compute_hash(
+            compute_hash(*(point.uid for point in self.points)),
+            self.timeout, self.strict, self.route)
 
     @property
     def state(self):

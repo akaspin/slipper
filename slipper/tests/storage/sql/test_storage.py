@@ -15,7 +15,7 @@ class IntersectedTestCase(DBTestBase):
 
     def setUp(self):
         super(IntersectedTestCase, self).setUp()
-        self.points = [primitives.Point() for _ in range(6)]
+        self.points = [primitives.Point(compute_hash(i)) for i in range(6)]
         self.contract1 = primitives.Contract(points=self.points[:3],
                                              timeout=30)
         self.contract2 = primitives.Contract(points=self.points[2:],
@@ -26,6 +26,7 @@ class IntersectedTestCase(DBTestBase):
         self.points[2].state = 2
         self.points[2].payload = {'2': 4}
         self.points[2].dt_finish = datetime.utcnow()
+
         DRIVER.create_contract(self.contract1)
         DRIVER.create_contract(self.contract2)
         self.assertDictEqual(

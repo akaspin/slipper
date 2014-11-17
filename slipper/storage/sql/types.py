@@ -59,7 +59,7 @@ class JSON(TypeDecorator):
         return value
 
 
-class HASH(types.TypeDecorator):
+class SHA1(types.TypeDecorator):
     """BINARY hash SQLAlchemy type decorator"""
     impl = BINARY
 
