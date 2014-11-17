@@ -50,7 +50,7 @@ logging:
       <<: *__logger_info
     sqlalchemy.engine:
       <<: *__logger_info
-      level: INFO
+      level: WARNING
 
   root:
     <<: *__logger_info

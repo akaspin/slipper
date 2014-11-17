@@ -5,11 +5,8 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 from datetime import datetime, timedelta
 import hashlib
 from operator import attrgetter
-import uuid
 
 from six import with_metaclass
-
-from slipper.model.exc import InvalidContractDataError, InvalidPointData
 
 
 def compute_hash(*args):
