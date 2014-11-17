@@ -11,6 +11,11 @@ from slipper.utils.imports import class_for_name
 class AbstractDriver(with_metaclass(ABCMeta)):
 
     def boot(self):
+        """Boot actions."""
+        pass
+
+    def cleanup(self):
+        """Cleanup actions."""
         pass
 
 

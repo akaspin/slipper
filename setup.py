@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name='slipper',
     version='0.1',
-    packages=find_packages(exclude=['tests.*', 'tests']),
+    packages=find_packages(exclude=['_tes.*', '_tes']),
     url='',
     license='',
     author='akaspin',
@@ -17,7 +17,7 @@ setup(
             'etc/conf.yaml',
         ]
     },
-    tests_require=['nose'],
+    tests_require=['nose', 'pytest'],
     zip_safe=False,
     entry_points={
         'console_scripts': [

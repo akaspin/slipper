@@ -1,3 +1,4 @@
+pytest
 amqp==1.4.6
 easydict==1.5
 PyMySQL==0.6.2
