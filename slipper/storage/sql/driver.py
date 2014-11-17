@@ -16,6 +16,10 @@ class MySQLDriver(AbstractStorageDriver):
         super(MySQLDriver, self).boot()
         Base.metadata.create_all(engine)
 
+    def cleanup(self):
+        Base.metadata.drop_all(engine)
+
+
     @classmethod
     @with_transaction()
     def create_contract(cls, contract, session=None):
