@@ -17,7 +17,9 @@ class Consumer(ConnectibleMixin, HeartbeatMixin, ConsumerMixin):
 
     def __init__(self, callback, queue):
         """
-        :param callback: Callback handler.
+        :param callback: Callback handler. See
+            :py:method:`slipper.messaging.amqp.consumer.Consumer#process`
+            for details.
         :param queue: Queue.
         """
         self.callback = callback
@@ -57,14 +59,17 @@ class Consumer(ConnectibleMixin, HeartbeatMixin, ConsumerMixin):
                 message.requeue()
         except Exception as e:
             message.reject()
-            LOG.error('Message not handled: %s', e)
+            LOG.error('Message rejected: %s', e)
 
     def get_consumers(self, consumer, channel):
         return [consumer(queues=[self.queue], callbacks=[self.process])]
 
     @staticmethod
     def parse(body):
-        """Parse message body."""
+        """Parse message body from msgpack.
+
+        :returns: Unpacked message body
+        """
         try:
             return msgpack.unpackb(body), False
         except msgpack.ExtraData:

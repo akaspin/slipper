@@ -35,7 +35,6 @@ class HeartbeatMixin(object):
         if not conn.connected:
             conn.connect()
         if detect_environment() == 'gevent':
-            # amqp with gevent don't support heartbeat, emulate it!
             self.spawn_gevent_heartbeat(ref(conn), rate, interval)
 
 

@@ -1,8 +1,6 @@
 # coding=utf-8
 
-from abc import ABCMeta, abstractmethod
-
-from six import with_metaclass
+from abc import abstractmethod
 
 from slipper.utils.proxy import PromiseProxy
 from slipper.driver import AbstractDriver, get_driver

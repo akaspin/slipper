@@ -22,7 +22,7 @@ class IntersectedTestCase(DBTestBase):
                                              timeout=30)
         self.maxDiff = 1000
 
-    def atest_create(self):
+    def test_create(self):
         self.points[2].state = 2
         self.points[2].payload = {'2': 4}
         self.points[2].dt_finish = datetime.utcnow()
