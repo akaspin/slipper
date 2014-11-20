@@ -10,12 +10,14 @@ from slipper.storage.exc import NotFoundError
 def test_create_many(storage, contracts):
     """Create many contracts."""
     for contract in contracts:
-        #> Create contract
+        # > Create contract
         storage.create_contract(contract)
 
-        #> Assert created contract is equal
+        # > Assert created contract is equal
         assert storage.get_contract(contract.uid).serialized == \
                contract.serialized
+
+        storage.delete_contract(contract.uid)
 
 
 def test_delete(storage, contracts_in_storage):
@@ -42,4 +44,3 @@ def test_update_point(storage, contracts_in_storage):
 
     assert storage.get_contract(contract.uid).serialized == \
            contract.serialized
-
