@@ -21,31 +21,25 @@ def test_create_many(storage, contracts):
 def test_delete(storage, contracts_in_storage):
     """Create contracts when delete all but first."""
 
-    #> Delete first contract
-    storage.delete_contract(contracts_in_storage[0].uid)
+    for i, contract in enumerate(contracts_in_storage):
+        storage.delete_contract(contract.uid)
+        with pytest.raises(NotFoundError):
+            storage.get_contract(contract.uid)
 
-    #> Assert what deleted contract not found
-    with pytest.raises(NotFoundError):
-        storage.get_contract(contracts_in_storage[0].uid)
-
-    #> Assert all non-deleted contracts are consistent
-    for contract in contracts_in_storage[1:]:
-        assert storage.get_contract(contract.uid).serialized == \
-               contract.serialized
+        for stale in contracts_in_storage[i+1:]:
+            assert storage.get_contract(stale.uid).serialized == \
+                   stale.serialized
 
 
 def test_update_point(storage, contracts_in_storage):
 
-    #> modify one point
     contract = contracts_in_storage[1]
     point = contract.points[0]
     point.state = 2
     point.dt_finish = datetime.utcnow()
 
-    #> And update it
     storage.update_point(point)
 
-    #> Assert contract is updated
     assert storage.get_contract(contract.uid).serialized == \
            contract.serialized
 

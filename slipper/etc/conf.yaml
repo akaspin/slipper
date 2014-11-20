@@ -46,6 +46,7 @@ logging:
   loggers:
     slipper:
       <<: *__logger_info
+      level: DEBUG
     kombu:
       <<: *__logger_info
     sqlalchemy.engine:

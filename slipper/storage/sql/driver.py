@@ -1,6 +1,6 @@
 # coding=utf-8
+from logging import getLogger
 
-from sqlalchemy.sql.expression import exists, select
 from sqlalchemy.orm.exc import NoResultFound
 
 from slipper.model import primitives
@@ -8,6 +8,9 @@ from slipper.storage.driver import AbstractStorageDriver
 from slipper.storage.exc import NotFoundError
 from slipper.storage.sql.transaction import with_transaction, engine
 from slipper.storage.sql.schema import Contract, Point, Link, Base
+
+
+LOG = getLogger(__name__)
 
 
 class MySQLDriver(AbstractStorageDriver):
@@ -32,6 +35,7 @@ class MySQLDriver(AbstractStorageDriver):
         Point.create(contract.points, session=session)
         Contract.create(contract, session=session)
         Link.create(contract, session=session)
+        LOG.debug('Contract created: %s', contract.serialized)
 
     @classmethod
     @with_transaction()
@@ -65,14 +69,16 @@ class MySQLDriver(AbstractStorageDriver):
             JOIN contract_point_links as l ON points.uid = l.point_uid
             LEFT OUTER JOIN contracts ON contracts.uid = l.contract_uid
             WHERE
-              l.contract_uid = UNHEX(:contract_uid)
-              AND EXISTS (
+              l.contract_uid = UNHEX(:contract_uid) AND
+              EXISTS (
                 SELECT 1 FROM contract_point_links as l
                   WHERE l.point_uid = points.uid
                   GROUP BY l.point_uid
                   HAVING COUNT(l.point_uid) = 1);
+          DELETE FROM contracts WHERE uid = UNHEX(:contract_uid);
         '''
         session.execute(sql, {'contract_uid': uid})
+        LOG.debug('Contract deleted: %s', uid)
 
     @classmethod
     @with_transaction()

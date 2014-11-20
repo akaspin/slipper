@@ -17,7 +17,7 @@ setup(
             'etc/conf.yaml',
         ]
     },
-    tests_require=['nose', 'pytest'],
+    tests_require=['pytest'],
     zip_safe=False,
     entry_points={
         'console_scripts': [
