@@ -36,18 +36,15 @@ def contracts(request):
     return [Contract(points=points[l:r], timeout=30) for (l, r) in rs]
 
 
-@pytest.fixture
+@pytest.yield_fixture
 def contracts_in_storage(request, storage, contracts):
     """Contracts in storage"""
     for contract in contracts:
         storage.create_contract(contract)
+    yield contracts
 
-    def fin():
-        for c in contracts:
-            try:
-                storage.delete_contract(c.uid)
-            except:
-                pass
-
-    request.addfinalizer(fin)
-    return contracts
+    for c in contracts:
+        try:
+            storage.delete_contract(c.uid)
+        except:
+            pass
