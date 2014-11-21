@@ -8,14 +8,23 @@ import yaml
 import uuid
 
 
-__all__ = ['CFG', 'getLogger']
+__all__ = ['CFG']
+
+
+def _tune_value(container, key, value):
+    # print container, key, value
+    if '.' not in key:
+        setattr(container, key, value)
+    else:
+        k, rest = key.split('.', 1)
+        _tune_value(container[k], rest, value)
 
 
 class _Config(dict):
 
     __config__ = None
 
-    def __call__(self, filename=None):
+    def __call__(self, filename=None, overrides=None):
         if self.__config__ is not None:
             raise AttributeError('Already configured with %s.'
                                  % self.__config__)
@@ -29,6 +38,16 @@ class _Config(dict):
                 'Configuration for %s loaded from %s.',
                 self.process_uuid[:8],
                 filename)
+        if overrides is not None:
+            for k, v in overrides.items():
+                if isinstance(v, tuple):
+                    v, fn = v
+                    try:
+                        v = fn(v)
+                    except Exception:
+                        pass
+                if v is not None:
+                    _tune_value(self, k, v)
 
     def __init__(self, d=None):
         super(_Config, self).__init__()

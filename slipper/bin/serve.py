@@ -17,8 +17,10 @@ from slipper.messaging.handler import ContractsNewHanler, PointsNewHandler, \
     ScheduleHandler, WaiterHandler
 
 
-CFG(os.environ.get('SLIPPER_CONFIG'))
-LOG = getLogger(__name__)
+CFG(os.environ.get('SLIPPER_CONFIG'), {
+    'http.host': os.environ.get('SLIPPER_HTTP_HOST'),
+    'http.port': (os.environ.get('SLIPPER_HTTP_PORT'), int),
+})
 
 
 def run_forever(cb):
@@ -38,6 +40,8 @@ def run_all():
 
     s = WSGIServer((CFG.http.host, CFG.http.port), app)
     spawn(s.start)
+    getLogger(__name__).info('Slipper serving. HTTP on http://%s:%s',
+                             CFG.http.host, CFG.http.port)
 
 
 def main():

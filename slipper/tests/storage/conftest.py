@@ -32,7 +32,6 @@ def contracts(request):
     max_ix = max(m for (_, m) in rs)
     points = [Point(compute_hash(inst, i))
               for i in range(min_ix, max_ix+1)]
-    print rs, min_ix, max_ix
     return [Contract(points=points[l:r], timeout=30) for (l, r) in rs]
 
 

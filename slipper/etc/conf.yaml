@@ -32,7 +32,7 @@ logging:
   version: 1
   formatters:
     brief:
-      format: '%(levelname)-7s %(process)s:%(threadName)s
+      format: '%(levelname)-7s %(asctime)15s %(process)s:%(threadName)s
               %(name)s:%(lineno)s %(message)s'
       datefmt: '%y-%m-%d,%H:%M:%S'
   handlers:
@@ -46,7 +46,10 @@ logging:
   loggers:
     slipper:
       <<: *__logger_info
-      level: DEBUG
+#      level: INFO
+    slipper.storage:
+      <<: *__logger_info
+      level: ERROR
     kombu:
       <<: *__logger_info
     sqlalchemy.engine:
