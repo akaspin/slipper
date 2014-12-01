@@ -2,7 +2,7 @@ drivers:
   # Messaging
   - &__messaging_kombu_pyamqp
     driver: slipper.messaging.amqp.driver.KombuDriver
-    url: pyamqp://admin:admin@localhost:5672//
+    url: amqp://admin:admin@localhost:5672//
     heartbeat: 1
 
   # Storage

@@ -37,7 +37,7 @@ class AbstractHandler(with_metaclass(ABCMeta)):
 
 
 class ContractsNewHanler(AbstractHandler):
-    """Handler to register new contract."""
+    """Handler to register new contracts."""
 
     __SOURCE__ = ('contracts', 'new')
 
@@ -65,7 +65,9 @@ class PointsNewHandler(AbstractHandler):
         STORAGE.update_point(point)
 
 
-class ScheduleHandler(AbstractHandler):
+class SchedulerHandler(AbstractHandler):
+    """Messaging handler to deal with existing contracts."""
+
     __SOURCE__ = ('contracts', 'schedule')
 
     def accept(self, data, raw):

@@ -5,10 +5,7 @@ import pytest
 import os
 import signal
 import subprocess
-import shlex
 import copy
-
-import logging
 
 
 def getstatusoutput(cmd, env=None):
@@ -48,11 +45,7 @@ def _app_fixture(request, cmd, env=None):
 @pytest.fixture(scope='session')
 def slipper_instances(request):
     cmd = 'slipper-serve'
-
-
-    _app_fixture(request, cmd, env={
-        'SLIPPER_HTTP_PORT': 9001
-    })
+    _app_fixture(request, cmd)
 
     # print request.config.getoption('--slipper-instances')
     # return request.config.getoption('--slipper-instances')

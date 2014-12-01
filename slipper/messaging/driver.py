@@ -25,6 +25,7 @@ class AbstractMessagingDriver(AbstractDriver):
 
         :param str destination: Destination.
         """
+        raise NotImplementedError('Child responsibility.')
 
 
 DRIVER = PromiseProxy(lambda: get_driver('messaging')())
